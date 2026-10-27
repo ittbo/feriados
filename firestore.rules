@@ -1,0 +1,69 @@
+rules_version = '2';
+
+// Reglas de la app de feriados. Etapa 0: dominio de la empresa y rol hr_admin.
+// Las colecciones de datos llegan en la etapa 1; acá ya dejamos la base y sus tests.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function allowedDomains() {
+      return ['tbo.group', 'gobetween.lsp.com'];
+    }
+
+    function email() {
+      return request.auth != null && request.auth.token.email != null
+        ? request.auth.token.email.lower()
+        : '';
+    }
+
+    // Autenticado con una cuenta verificada de alguno de los dominios de la empresa.
+    function isStaff() {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && email().split('@').size() == 2
+        && email().split('@')[1] in allowedDomains();
+    }
+
+    function isHrAdmin() {
+      return isStaff() && request.auth.token.get('role', '') == 'hr_admin';
+    }
+
+    // Catálogos y configuración: los lee cualquier persona de la empresa, los escribe RRHH.
+    match /countries/{countryCode} {
+      allow read: if isStaff();
+      allow write: if isHrAdmin();
+    }
+
+    match /settings/{document} {
+      allow read: if isStaff();
+      allow write: if isHrAdmin();
+    }
+
+    match /people/{personEmail} {
+      allow read: if isStaff();
+      allow write: if isHrAdmin();
+    }
+
+    match /holidays/{holidayId} {
+      allow read: if isStaff();
+      allow write: if isHrAdmin();
+
+      // Quién trabaja: solo existe un documento por persona que trabaja el feriado.
+      // Lo ve toda la empresa. La carga por persona y la aprobación del líder se
+      // agregan en la etapa 2, junto con sus tests.
+      match /workers/{personEmail} {
+        allow read: if isStaff();
+        allow write: if isHrAdmin();
+      }
+    }
+
+    // Auditoría de mails: solo RRHH.
+    match /mailLog/{document} {
+      allow read: if isHrAdmin();
+      allow write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

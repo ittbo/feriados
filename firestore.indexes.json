@@ -1,0 +1,21 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "holidays",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "countryCode", "order": "ASCENDING" },
+        { "fieldPath": "date", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "holidays",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "date", "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

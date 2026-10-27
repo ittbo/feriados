@@ -1,0 +1,7 @@
+{
+  "projects": {
+    "default": "tbo-feriados-dev",
+    "dev": "tbo-feriados-dev",
+    "prod": "tbo-feriados-prod"
+  }
+}

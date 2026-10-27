@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+
+  functions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: functions/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      # @firebase/rules-unit-testing todavía pide firebase@12 como peer; con 13 los tests pasan.
+      - run: npm ci --legacy-peer-deps
+        working-directory: functions
+      - run: npm run typecheck
+        working-directory: functions
+      # Los tests de reglas necesitan el emulador de Firestore.
+      - run: npx firebase emulators:exec --only firestore --project tbo-feriados-test "cd functions && npx vitest run"
+        working-directory: .
+        env:
+          FIREBASE_CLI_PREVIEWS: ''

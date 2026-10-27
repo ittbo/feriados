@@ -1,0 +1,11 @@
+{
+  "name": "feriados",
+  "private": true,
+  "scripts": {
+    "postinstall": "npm install --prefix web && npm install --prefix functions",
+    "dev": "npm run dev --prefix web",
+    "emulators": "npm exec --prefix functions -- firebase emulators:start --only auth,firestore,functions",
+    "test": "npm test --prefix web && npm exec --prefix functions -- firebase emulators:exec --only firestore --project tbo-feriados-test \"cd functions && npx vitest run\"",
+    "build": "npm run build --prefix web && npm run build --prefix functions"
+  }
+}
